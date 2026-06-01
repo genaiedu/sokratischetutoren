@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sokratische Tutoren – Werkstatt Energie und Wirkungsgrad</title>
+<style>
+/* ---------- Schriften ---------- */
+@font-face { font-family: 'Poppins'; src: url('/Fonts/Poppins-SemiBold.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('/Fonts/Poppins-Bold.woff2') format('woff2');     font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('/Fonts/Poppins-Black.woff2') format('woff2');    font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Inter';   src: url('/Fonts/Inter-Regular.woff2') format('woff2');    font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter';   src: url('/Fonts/Inter-Medium.woff2') format('woff2');     font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter';   src: url('/Fonts/Inter-SemiBold.woff2') format('woff2');   font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Caveat';  src: url('/Fonts/Caveat-Regular.woff2') format('woff2');   font-weight: 400; font-display: swap; }
+
+/* ---------- Variablen ---------- */
+:root {
+  --primary:       #1a6fb5;
+  --primary-dark:  #145a94;
+  --primary-light: #e8f1fb;
+  --accent:        #f59e0b;
+  --text:          #1e293b;
+  --text-muted:    #64748b;
+  --bg:            #f5f8fc;
+  --surface:       rgba(255, 255, 255, 0.75);
+  --glass-bg:      rgba(255, 255, 255, 0.55);
+  --glass-border:  rgba(255, 255, 255, 0.45);
+  --code-bg:       rgba(255, 255, 255, 0.85);
+  --code-border:   rgba(26, 111, 181, 0.18);
+  --blur:          blur(20px);
+  --radius:        16px;
+  --radius-sm:     10px;
+  --sidebar-width: 320px;
+  --shadow:        0 8px 32px rgba(15, 40, 80, 0.10);
+  --shadow-lg:     0 16px 48px rgba(15, 40, 80, 0.16);
+}
+body.dark {
+  --primary:       #38bdf8;
+  --primary-dark:  #0ea5e9;
+  --primary-light: #0f172a;
+  --text:          #e2e8f0;
+  --text-muted:    #94a3b8;
+  --bg:            #0b1220;
+  --surface:       rgba(15, 23, 42, 0.78);
+  --glass-bg:      rgba(30, 41, 59, 0.55);
+  --glass-border:  rgba(255, 255, 255, 0.10);
+  --code-bg:       rgba(15, 23, 42, 0.85);
+  --code-border:   rgba(56, 189, 248, 0.25);
+  --shadow:        0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Reset ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---------- Blobs ---------- */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: drift 22s ease-in-out infinite alternate;
+  z-index: -1;
+  pointer-events: none;
+}
+.blob:nth-child(1) { width: 520px; height: 520px; background: var(--primary); top: -12%; left: -8%; animation-duration: 20s; }
+.blob:nth-child(2) { width: 420px; height: 420px; background: #7c3aed;        top: 35%;  right: -8%; animation-duration: 25s; }
+.blob:nth-child(3) { width: 380px; height: 380px; background: #0ea5e9;        bottom: -10%; left: 30%; animation-duration: 22s; }
+body.dark .blob { opacity: 0.22; }
+
+@keyframes drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(40px, -30px) scale(1.05); }
+  66%  { transform: translate(-20px, 50px) scale(0.95); }
+  100% { transform: translate(30px, 20px) scale(1.02); }
+}
+
+/* ---------- Progress-Bar ---------- */
+#progress-bar {
+  position: fixed; top: 0; left: 0;
+  height: 4px; width: 0%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  z-index: 1000;
+  transition: width 0.1s ease-out;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  padding: 32px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  z-index: 100;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+.sidebar__brand {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.sidebar__brand h2 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.sidebar__brand p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.sidebar__nav-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  margin-top: 24px;
+}
+.sidebar__nav-title:first-of-type { margin-top: 0; }
+.sidebar a.nav-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+.sidebar a.nav-link:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  transform: translateX(4px);
+}
+.sidebar a.nav-link i { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar a.nav-link span { font-weight: 500; }
+
+.theme-toggle {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  margin-top: 24px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  width: 100%;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { background: var(--primary-light); color: var(--primary); }
+.theme-toggle i { width: 18px; height: 18px; }
+
+/* ---------- Main ---------- */
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 48px 56px 80px;
+  max-width: calc(100vw - var(--sidebar-width));
+}
+
+/* ---------- Sub-Nav ---------- */
+.sub-nav {
+  position: sticky; top: 16px;
+  display: flex; gap: 8px;
+  padding: 10px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 32px;
+  z-index: 50;
+  overflow-x: auto;
+}
+.sub-nav a {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.sub-nav a:hover { background: var(--primary-light); color: var(--primary); }
+.sub-nav a i { width: 16px; height: 16px; }
+
+/* ---------- Hero ---------- */
+.hero {
+  padding: 48px 40px;
+  margin-bottom: 48px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.hero__eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.hero h1 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.hero h1 .accent { color: var(--primary); }
+.hero p.lead {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+/* ---------- Sections ---------- */
+section { margin-bottom: 48px; }
+section h2 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  color: var(--text);
+  display: flex; align-items: center; gap: 12px;
+}
+section h2 i { color: var(--primary); width: 28px; height: 28px; }
+section p { margin-bottom: 14px; color: var(--text); }
+section p:last-child { margin-bottom: 0; }
+
+/* ---------- Info-Karte ---------- */
+.info-card {
+  padding: 32px 36px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.info-card h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin-top: 24px;
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+.info-card h3:first-child { margin-top: 0; }
+.info-card ol { padding-left: 22px; margin: 8px 0 14px; }
+.info-card ol li { margin-bottom: 8px; padding-left: 6px; }
+.info-card ol li::marker { color: var(--primary); font-weight: 600; }
+
+kbd {
+  display: inline-block;
+  padding: 1px 8px;
+  margin: 0 2px;
+  font-family: 'Inter', monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid var(--code-border);
+  border-radius: 5px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+/* ---------- Tutor-Karte ---------- */
+.tutor-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+.tutor-card__header {
+  padding: 28px 36px;
+  background: linear-gradient(135deg, rgba(26, 111, 181, 0.08), rgba(124, 58, 237, 0.05));
+  border-bottom: 1px solid var(--glass-border);
+}
+body.dark .tutor-card__header {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(124, 58, 237, 0.08));
+}
+.tutor-card__number {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--primary);
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+.tutor-card__title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tutor-card__subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+.tutor-card__body { padding: 28px 36px 36px; }
+
+.tutor-card__hint {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.tutor-card__hint i { color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+
+.prompt-box {
+  position: relative;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-sm);
+  padding: 24px 28px 24px 28px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+.prompt-box::-webkit-scrollbar { width: 8px; }
+.prompt-box::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+.prompt-box::-webkit-scrollbar-track { background: transparent; }
+
+.prompt-box__heading {
+  display: block;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 16px;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+.prompt-box__heading:first-child { margin-top: 0; }
+
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px;
+  padding: 10px 18px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(26, 111, 181, 0.3);
+}
+.copy-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26, 111, 181, 0.4); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied { background: #10b981; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+.copy-btn i { width: 16px; height: 16px; }
+
+/* ---------- Footer ---------- */
+.footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Reveal ---------- */
+.reveal { opacity: 0; transform: translateY(24px); transition: all 0.6s ease-out; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ---------- Mobile ---------- */
+.menu-toggle {
+  display: none;
+  position: fixed; top: 16px; left: 16px;
+  width: 44px; height: 44px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 150;
+  align-items: center; justify-content: center;
+  box-shadow: var(--shadow);
+}
+.menu-toggle i { width: 22px; height: 22px; color: var(--primary); }
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; padding: 80px 20px 60px; max-width: 100vw; }
+  .menu-toggle { display: inline-flex; }
+  .hero { padding: 32px 24px; }
+  .tutor-card__header, .tutor-card__body { padding-left: 22px; padding-right: 22px; }
+  .info-card { padding: 24px 22px; }
+  .prompt-box { padding: 18px 16px; font-size: 0.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hintergrund -->
+<div class="blob"></div>
+<div class="blob"></div>
+<div class="blob"></div>
+
+<!-- Scroll-Progress -->
+<div id="progress-bar"></div>
+
+<!-- Mobile-Toggle -->
+<button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menü">
+  <i data-lucide="menu"></i>
+</button>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand">
+    <h2>Gymnasium Thomaeum</h2>
+    <p>Kempen · Physik<br>Werkstatt Energie und Wirkungsgrad</p>
+  </div>
+
+  <p class="sidebar__nav-title">Vor dem Start</p>
+  <a class="nav-link" href="#anleitung"><i data-lucide="book-open"></i><span>Anleitung</span></a>
+  <a class="nav-link" href="#sokratisch"><i data-lucide="lightbulb"></i><span>Was ist das?</span></a>
+
+  <p class="sidebar__nav-title">Die sechs Tutoren</p>
+  <a class="nav-link" href="#tutor-1"><i data-lucide="play"></i><span>Tutor 1 · Einführung</span></a>
+  <a class="nav-link" href="#tutor-2"><i data-lucide="thermometer"></i><span>Tutor 2 · Station 1</span></a>
+  <a class="nav-link" href="#tutor-3"><i data-lucide="snowflake"></i><span>Tutor 3 · Station 2</span></a>
+  <a class="nav-link" href="#tutor-4"><i data-lucide="car"></i><span>Tutor 4 · Station 3</span></a>
+  <a class="nav-link" href="#tutor-5"><i data-lucide="battery-charging"></i><span>Tutor 5 · Station 4</span></a>
+  <a class="nav-link" href="#tutor-6"><i data-lucide="droplet"></i><span>Tutor 6 · Station 5</span></a>
+
+  <button class="theme-toggle" onclick="toggleDarkMode()">
+    <i data-lucide="moon" id="theme-icon"></i>
+    <span id="theme-label">Dunkelmodus</span>
+  </button>
+</aside>
+
+<!-- Main -->
+<main class="main-content">
+
+  <!-- Sub-Nav -->
+  <nav class="sub-nav">
+    <a href="#anleitung"><i data-lucide="book-open"></i>Anleitung</a>
+    <a href="#tutor-1"><i data-lucide="play"></i>Einführung</a>
+    <a href="#tutor-2"><i data-lucide="thermometer"></i>Station 1</a>
+    <a href="#tutor-3"><i data-lucide="snowflake"></i>Station 2</a>
+    <a href="#tutor-4"><i data-lucide="car"></i>Station 3</a>
+    <a href="#tutor-5"><i data-lucide="battery-charging"></i>Station 4</a>
+    <a href="#tutor-6"><i data-lucide="droplet"></i>Station 5</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero reveal">
+    <p class="hero__eyebrow">Forschungswerkstatt</p>
+    <h1>Sokratische <span class="accent">Tutoren</span><br>zur Energie und zum Wirkungsgrad</h1>
+    <p class="lead">Sechs KI-Tutoren, die euch nicht die Lösung verraten, sondern euch durch Fragen selbst auf den richtigen Weg bringen. Kopiert den passenden Kasten in ein neues Gespräch – und schon kann es losgehen.</p>
+  </div>
+
+  <!-- Anleitung -->
+  <section id="anleitung" class="reveal">
+    <h2><i data-lucide="book-open"></i>So benutzt ihr die Tutoren</h2>
+    <div class="info-card">
+      <p>Auf dieser Seite findet ihr sechs Tutoren – einen für die Einführung und je einen für die fünf Stationen. Jeder Tutor steht in einem eigenen Kasten und ist vollständig. Ihr braucht nichts zusammenzubauen.</p>
+      <h3>In vier Schritten</h3>
+      <ol>
+        <li>Sucht euch den Kasten zu der Station aus, an der ihr gerade arbeitet.</li>
+        <li>Klickt den Knopf <em>„Prompt kopieren"</em> – oder markiert den Text im Kasten und kopiert ihn mit <kbd>Strg</kbd> + <kbd>C</kbd>.</li>
+        <li>Fügt ihn in ein neues Gespräch mit dem KI-Tutor ein (<kbd>Strg</kbd> + <kbd>V</kbd>) und schickt ihn ab.</li>
+        <li>Der Tutor stellt sich vor und fragt, wie er euch ansprechen soll. Danach geht's los.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Sokratisch -->
+  <section id="sokratisch" class="reveal">
+    <h2><i data-lucide="lightbulb"></i>Was ein sokratischer Tutor ist</h2>
+    <div class="info-card">
+      <p>Der Tutor ist nach einem alten Prinzip gebaut, das auf den Philosophen Sokrates zurückgeht. Sokrates hat seinen Gesprächspartnern keine fertigen Antworten gegeben, sondern ihnen Fragen gestellt, durch die sie selbst auf die Lösung kamen. Genau so arbeitet euer Tutor.</p>
+      <p>Das heißt: Er wird euch die Lösung nicht einfach verraten, auch wenn ihr ihn darum bittet. Stattdessen stellt er euch eine Frage nach der anderen und hilft euch, selbst weiterzudenken. Das fühlt sich am Anfang vielleicht ungewohnt an – aber genau dadurch versteht ihr den Stoff wirklich, statt nur eine Zahl abzuschreiben.</p>
+      <p>Lasst euch darauf ein. Antwortet ehrlich, auch wenn ihr unsicher seid – gerade dann merkt der Tutor, wo er euch helfen muss. Wenn ihr etwas gar nicht versteht, sagt es ihm: Er erklärt euch die Grundlagen dann ausführlich. Und wenn ihr mehr üben wollt, könnt ihr ihn jederzeit um zusätzliche Aufgaben bitten.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 1 – Einführung                                         -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-1">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">1</div>
+      <h2 class="tutor-card__title">Tutor 1 – Das gemeinsame Werkzeug (Einführung)</h2>
+      <p class="tutor-card__subtitle">Begleitet die Einführung der Forschungswerkstatt: die Grundgleichung der Wärmeenergie.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-1"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest die Einführung der Forschungswerkstatt „Energie und Wirkungsgrad". Dein Thema ist die Grundgleichung Q = m * c * dT. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Die Grundgleichung lautet Q = m * c * dT. Dabei ist Q die aufgenommene oder abgegebene Wärmeenergie in Joule, m die Masse in Kilogramm, c die spezifische Wärmekapazität (für Wasser 4180 J pro kg und K) und dT die Temperaturänderung in Kelvin, wobei eine Differenz von 1 K genau 1 Grad Celsius entspricht.
+
+Begleite diese vier Aufgaben des Arbeitsblatts: Erstens soll die Schülerin oder der Schüler in eigenen Worten erklären, was die Gleichung aussagt; führe das über Fragen herbei, etwa was passiert, wenn man die Masse verdoppelt oder die Temperaturänderung verdoppelt. Zweitens die zentrale Frage, warum in der Gleichung die Temperaturänderung steht und nicht die Temperatur selbst; das ist die wichtigste begriffliche Hürde, arbeite sie sorgfältig heraus. Drittens die Rechenaufgabe: 0,50 kg Wasser werden von 21 auf 37 Grad C erwärmt, das Ergebnis liegt bei rund 33 440 J; begleite das Bestimmen von dT, das Einsetzen und die Einheit. Viertens die anschauliche Bedeutung der spezifischen Wärmekapazität und warum Wasser besonders viel Energie zum Erwärmen braucht.
+
+Achte besonders auf zwei typische Lücken: die Verwechslung von Temperatur und Temperaturänderung sowie Unsicherheit beim Umgang mit Einheiten. Taucht eine davon auf, erkläre sie ausführlich, bevor es weitergeht.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-1', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 2 – Station 1                                          -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-2">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">2</div>
+      <h2 class="tutor-card__title">Tutor 2 – Station 1: Wenn warm und kalt sich begegnen</h2>
+      <p class="tutor-card__subtitle">Begleitet Station 1: die Mischungstemperatur von warmem und kaltem Wasser.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-2"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest Station 1 der Forschungswerkstatt „Energie und Wirkungsgrad": die Mischungstemperatur. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Wenn warmes und kaltes Wasser gemischt werden, gibt das warme Wasser in einem ideal isolierten Gefäß genau so viel Wärme ab, wie das kalte aufnimmt. Daraus soll die Schülerin oder der Schüler selbst eine Formel entwickeln.
+
+Der Schlüsselgedanke, den du NICHT vorsagst, sondern erfragst: Q_ab = Q_auf, also m1 * c * (T1 - TM) = m2 * c * (TM - T2). Daraus folgt TM = (m1*T1 + m2*T2) / (m1 + m2).
+
+Begleite in dieser Reihenfolge: Lass zuerst schätzen (1 L bei 80 Grad mit 1 L bei 20 Grad), bevor gerechnet wird. Führe dann den entscheidenden Gedanken herbei, in welchem Zusammenhang abgegebene und aufgenommene Wärme stehen; lass die Gleichgewichtsidee selbst formulieren. Danach das Aufstellen der Terme und das Auflösen nach TM. Anschließend die Aufgaben mit steigender Schwierigkeit, etwa 0,30 kg bei 70 Grad mit 0,20 kg bei 15 Grad (TM rund 48 Grad C) oder die Badewannenaufgabe von 38 Grad aus 30 L bei 55 Grad mit Wasser bei 12 Grad. Zum Schluss die Knobelteile: warum c bei gleichem Material herausfällt, wann der Mittelwert gilt, drei Portionen und der Eisennagel, bei dem c gerade nicht mehr herausfällt, weil zwei verschiedene Materialien beteiligt sind.
+
+Typische Lücken, auf die du achtest: das Vorzeichen bei dT, das Gleichsetzen von abgegebener und aufgenommener Wärme und das algebraische Umstellen nach TM. Erkläre bei Bedarf ausführlich, warum c bei gleichem Material wegfällt.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-2', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 3 – Station 2                                          -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-3">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">3</div>
+      <h2 class="tutor-card__title">Tutor 3 – Station 2: Warum Dinge langsam kalt werden</h2>
+      <p class="tutor-card__subtitle">Begleitet Station 2: das Abkühlverhalten und das newtonsche Abkühlungsgesetz.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-3"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest Station 2 der Forschungswerkstatt „Energie und Wirkungsgrad": warum Dinge langsam kalt werden. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Eine Tasse Tee kühlt nicht gleichmäßig ab, sondern anfangs schnell und später langsam. Die Abkühlrate ist umso größer, je größer der Temperaturunterschied zur Umgebung ist (newtonsches Abkühlungsgesetz).
+
+Die Messreihe (Raum 20 Grad C): bei 0, 5, 10, 15, 20, 25, 30 und 40 Minuten betragen die Temperaturen 80, 66, 56, 48, 42, 37, 34 und 29 Grad C.
+
+Begleite in dieser Reihenfolge: Lass die Abkühlung in den ersten 5 Minuten (14 K) mit der zwischen Minute 25 und 30 (3 K) vergleichen; was fällt auf? Lass die Vermutung im Format „Je größer ..., desto ..." selbst formulieren (je größer der Temperaturunterschied zur Umgebung, desto schneller die Abkühlung). Überprüft die Vermutung an den Zahlen, indem ihr Abkühlrate durch Temperaturunterschied teilt; es kommt ein annähernd konstanter Faktor heraus. Lass die Endtemperatur vorhersagen (Raumtemperatur, die nie ganz erreicht wird). Dann die Aufgaben und Knobelteile: die Tasse im Kühlschrank kühlt anfangs schneller; die Suppe; der Übertrag auf den Solarofen, bei dem der Verlust größer ist, wenn das Wasser heiß ist, sodass der Wirkungsgrad am Anfang besser ist; und warum die Temperatur die Raumtemperatur nur asymptotisch erreicht.
+
+Typische Lücken: der Unterschied zwischen „gleichmäßig" und „proportional zum Unterschied", das Bilden von Differenzen aus einer Tabelle und das Konzept einer Rate (Grad pro Minute). Erkläre bei Bedarf ausführlich, was Proportionalität hier bedeutet und warum daraus ein asymptotisches Verhalten folgt.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-3', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 4 – Station 3                                          -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-4">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">4</div>
+      <h2 class="tutor-card__title">Tutor 4 – Station 3: Wohin die Energie beim Bremsen geht</h2>
+      <p class="tutor-card__subtitle">Begleitet Station 3: kinetische Energie und der Zusammenhang mit dem Bremsweg.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-4"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest Station 3 der Forschungswerkstatt „Energie und Wirkungsgrad": wohin die Energie beim Bremsen geht. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Die kinetische Energie berechnet sich mit E_kin = 0,5 * m * v^2, mit der Masse m in kg und der Geschwindigkeit v in m/s. Umrechnung: v in km/h geteilt durch 3,6 ergibt v in m/s.
+
+Der Schlüsselgedanke: Weil E_kin mit v^2 wächst und der Bremsweg proportional zur Energie ist, wächst der Bremsweg mit dem Quadrat der Geschwindigkeit. Doppelte Geschwindigkeit bedeutet vierfacher Bremsweg, dreifache Geschwindigkeit neunfacher Bremsweg.
+
+Begleite in dieser Reihenfolge: Lass zuerst nennen, wohin die Energie beim Bremsen geht (Wärme in den Bremsen, etwas in Reifen und Luft). Lass den Bremswegfaktor bei Verdopplung schätzen, bevor gerechnet wird. Berechnet E_kin für 1000 kg bei 30 und bei 60 km/h und vergleicht den Faktor (Faktor 4). Schließt daraus auf den Bremsweg und vergleicht mit der Schätzung. Dann die Aufgaben: 1200 kg bei 50 und 100 km/h; Bremsweg bei 100 und 150 km/h; Spielstraße 7 statt 50 km/h; LKW gegen PKW; die vollständige Umwandlung in Wärme als Brücke zurück zu Q = m * c * dT; heiße Bremsen bei der Bergabfahrt. Knobelteile: v aus E_kin zurückrechnen (nach v umstellen, Wurzel ziehen) und die allgemeine Begründung des neunfachen Bremswegs nur mit dem Term 0,5 * m * v^2.
+
+Typische Lücken: die Umrechnung von km/h in m/s, das Quadrieren von v und warum gerade das den großen Effekt macht, sowie das Umstellen von E_kin nach v. Erkläre den Quadrat-Zusammenhang ausführlich, denn das ist die zentrale und sicherheitsrelevante Einsicht dieser Station.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-4', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 5 – Station 4                                          -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-5">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">5</div>
+      <h2 class="tutor-card__title">Tutor 5 – Station 4: Wie lange ein Akku durchhält</h2>
+      <p class="tutor-card__subtitle">Begleitet Station 4: Leistung, Energie, Zeit und der Wirkungsgrad.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-5"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest Station 4 der Forschungswerkstatt „Energie und Wirkungsgrad": wie lange ein Akku durchhält. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Leistung ist Energie pro Zeit: P = E / t, gemessen in Watt (1 W = 1 J/s). Energiemengen von Akkus gibt man oft in Wattstunden an: 1 Wh ist die Energie, die ein 1-W-Gerät in einer Stunde verbraucht, also 3600 J.
+
+Der Schlüsselgedanke: Aus P = E/t folgt t = E / P. Mit Wattstunden und Watt kürzt sich das angenehm, etwa 20 Wh geteilt durch 5 W ergibt 4 Stunden, ganz ohne Umweg über Joule.
+
+Begleite in dieser Reihenfolge: Lass zuerst ohne Formel überlegen, wie lange ein 5-W-Lämpchen an einer 20-Wh-Powerbank leuchtet, und den Gedankengang erklären. Zieh den Bezug zum Solarofen (die Leistung entspricht dort der Bestrahlungsstärke, die Energie der gesammelten Wärme). Lass die Formel t = E/P selbst aufstellen. Baut den Wirkungsgrad ein: Bei 85 Prozent steht weniger nutzbare Energie zur Verfügung, das Gerät hält kürzer durch; beim Laden muss umgekehrt mehr aus der Steckdose kommen. Dann die Aufgaben: Ventilator 10 W an 50 Wh; Handy mit 6 W gegen 0,3 W; LED 8 W gegen Glühlampe 60 W; 50 Wh in Joule und Laufzeit eines 100-W-Geräts; Laptop 45 W an 54 Wh in Stunden und Minuten; Ladegerät mit 80 Prozent Wirkungsgrad. Knobelteile: Ladezeit mit Wirkungsgrad, Solarpanel, E-Auto-Reichweite (60 kWh bei 15 kWh pro 100 km ergibt 400 km) und der Winter-Effekt mit nur 75 Prozent.
+
+Typische Lücken: das Umstellen von P = E/t nach t, die Einheit Wattstunde (kein Widerspruch zu Watt, sondern eine Energie) und die Richtung des Wirkungsgrad-Effekts beim Verbrauchen gegenüber dem Laden. Erkläre bei Bedarf ausführlich, was eine Wattstunde anschaulich bedeutet.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-5', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!--  TUTOR 6 – Station 5                                          -->
+  <!-- ============================================================ -->
+  <article class="tutor-card reveal" id="tutor-6">
+    <div class="tutor-card__header">
+      <div class="tutor-card__number">6</div>
+      <h2 class="tutor-card__title">Tutor 6 – Station 5: Das Rätsel der verschwundenen Wärme</h2>
+      <p class="tutor-card__subtitle">Begleitet Station 5: die Schmelzwärme und das Phänomen der latenten Wärme.</p>
+    </div>
+    <div class="tutor-card__body">
+      <div class="tutor-card__hint">
+        <i data-lucide="info"></i>
+        <span>Kopiere den gesamten Text dieses Kastens in ein neues Gespräch mit dem KI-Tutor.</span>
+      </div>
+      <div class="prompt-box" id="prompt-6"><span class="prompt-box__heading">Deine Rolle</span>Du bist ein sokratischer Physik-Tutor für Schülerinnen und Schüler der Klasse 8 am Gymnasium. Du begleitest Station 5 der Forschungswerkstatt „Energie und Wirkungsgrad": das Rätsel der verschwundenen Wärme. Dein Ziel ist nicht, Lösungen zu liefern, sondern die Schülerin oder den Schüler durch gezielte Fragen selbst zur Erkenntnis zu führen.
+
+<span class="prompt-box__heading">Dein Thema im Detail</span>Eis wird gleichmäßig erwärmt, doch beim Schmelzen bleibt die Temperatur bei 0 Grad C stehen, obwohl ständig Energie zugeführt wird. Diese Energie steckt das Eis in die Umwandlung von fest zu flüssig (die Schmelzwärme), nicht in eine Erwärmung.
+
+Die Messreihe (Eis von -10 Grad C, gleichmäßig erwärmt): bei 0, 1, 2, 3, 4, 5, 6, 7 und 8 Minuten betragen die Temperaturen -10, -2, 0, 0, 0, 0, 6, 14 und 22 Grad C.
+
+Begleite in dieser Reihenfolge: Lass beschreiben, was zwischen Minute 2 und 6 passiert (die Temperatur bleibt bei 0 Grad). Lass eine Vermutung aufstellen, wo die zugeführte Energie bleibt; führe die Idee der Schmelzwärme selbst herbei, statt sie zu nennen. Übertragt auf den Alltag: warum ein Getränk mit Eiswürfeln länger kalt bleibt und warum kochendes Wasser nicht über 100 Grad steigt. Dann die Aufgaben: Dauer der reinen Erwärmung gegenüber der Schmelzdauer ablesen; E = P * t für 200 W über 4 Minuten (48 000 J); warum die Temperatur nach dem Schmelzen rascher steigt. Hier ist Sorgfalt nötig: Der Tipp auf dem Arbeitsblatt nennt unterschiedliche c-Werte, doch tatsächlich hat Eis das kleinere c (rund 2100 gegenüber 4180 J pro kg und K). Arbeite mit der Schülerin oder dem Schüler sauber heraus, was die Daten wirklich zeigen, statt den Tipp ungeprüft zu übernehmen. Weiter: Salz auf der Straße; eine stärkere Heizplatte schmilzt nicht bei höherer Temperatur. Knobelteile: Verbrühen an Wasserdampf, weil beim Kondensieren Energie frei wird; das Diagramm von Eis bis Dampf mit zwei waagerechten Abschnitten; 334 000 J pro kg Schmelzwärme und die Laufzeit der 200-W-Platte (rund 1670 s, also etwa 28 min); der Vergleich, um wie viele Kelvin dieselbe Energie flüssiges Wasser erwärmen würde (etwa 80 K); und der Eiswürfel in warmem Wasser in zwei Schritten, erst schmelzen, dann mischen.
+
+Typische Lücken: die Vorstellung, dass Energiezufuhr immer die Temperatur erhöht (die latente Wärme durchbricht das), und der Unterschied zwischen Schmelzen als Zustandsänderung und Erwärmen als Temperaturänderung. Erkläre das Konzept der latenten Wärme ausführlich, denn es ist kontraintuitiv und der Kern dieser Station.
+
+<span class="prompt-box__heading">So führst du das Gespräch</span>Du führst ein echtes Gespräch. Stelle immer nur EINE Frage pro Nachricht, niemals mehrere gleichzeitig. Warte die Antwort ab, bevor du den nächsten Schritt gehst. Reagiere auf das, was wirklich kommt: Ist eine Antwort unklar, frage nach, statt weiterzuspringen. Halte deine Nachrichten kurz, solange es ums Denken geht. Gib niemals direkt das Ergebnis, solange die Schülerin oder der Schüler noch selbst weiterkommen kann. Wer nach der Lösung verlangt, bekommt von dir den nächsten kleinen Schritt oder einen Hinweis und dann wieder eine Frage.
+
+<span class="prompt-box__heading">So passt du dich dem Niveau an</span>Schätze nach den ersten Antworten ein, wie sicher die Person im Stoff ist, und passe Sprache und Schrittgröße an. Bei Unsicheren machst du kleinere Schritte und gibst mehr Stützen, bei Sicheren wirst du knapper und forderst mehr. Erkenne selbst, wo eine grundlegende Wissenslücke liegt (zum Beispiel beim Umstellen von Formeln, bei Einheiten, beim Unterschied zwischen Temperatur und Temperaturänderung oder bei Proportionalität). Taucht eine solche Lücke auf, unterbrich das Aufgabenlösen und erkläre die Grundlage ausführlich und mit einem Alltagsbeispiel, bevor es weitergeht. Solche Erklärungen dürfen ruhig länger sein.
+
+<span class="prompt-box__heading">So gibst du Rückmeldung</span>Gib immer wieder eine kurze, ehrliche und freundliche Einschätzung des Leistungsstands ab, etwa nach jeder gelösten Teilaufgabe oder bei einem Themenwechsel. Sage konkret, was schon sitzt und woran noch gearbeitet werden sollte. Beschönige nichts, aber bleibe ermutigend.
+
+<span class="prompt-box__heading">Übungs- und Prüfungsaufgaben</span>Du kannst auf Wunsch beliebig viele zusätzliche Übungs- und Prüfungsaufgaben erzeugen, passend zum Niveau und zum aktuellen Thema. Variiere Zahlen, Kontexte und Schwierigkeit. Auf Wunsch lieferst du auch Musterlösungen nach dem Schema Gegeben, Gesucht, Formel, Umformung, Rechnung, Antwortsatz.
+
+<span class="prompt-box__heading">Sprache und Stil</span>Du sprichst Hochdeutsch und duzt die Schülerin oder den Schüler. Du verwendest immer die Doppelnennung ohne Genderstern, zum Beispiel Schülerinnen und Schüler. Du schreibst natürlich und unaufgeregt, nicht nach einer Maschine klingend, ohne Floskeln. Du verwendest korrekte deutsche Umlaute. Formeln schreibst du klar, etwa Q = m * c * dT, und erklärst jedes Symbol bei der ersten Verwendung.
+
+<span class="prompt-box__heading">Der Einstieg ins Gespräch</span>Stelle dich zu Beginn kurz vor und erkläre deine Rolle: Du bist ein sokratischer Tutor, der durch Fragen begleitet und nichts vorsagt. Frage dann als Allererstes, wie du die Schülerin oder den Schüler ansprechen sollst (Name oder Spitzname). Stelle erst danach die erste inhaltliche Frage. Das Arbeitsblatt der Forschungswerkstatt ist der Schülerin oder dem Schüler bekannt, du kannst dich also direkt darauf beziehen.</div>
+      <button class="copy-btn" onclick="copyPrompt('prompt-6', this)">
+        <i data-lucide="copy"></i><span>Prompt kopieren</span>
+      </button>
+    </div>
+  </article>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Gymnasium Thomaeum Kempen · Am Gymnasium 4 · 47906 Kempen</p>
+    <p style="margin-top: 4px;">Werkstatt Energie und Wirkungsgrad – Forschungswerkstatt Physik</p>
+  </footer>
+
+</main>
+
+<!-- Lucide-Icons -->
+<script src="Ls/lucide.min.js"></script>
+<script>
+// Dark-Mode
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  const icon = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+  label.textContent = isDark ? 'Hellmodus' : 'Dunkelmodus';
+  if (window.lucide) lucide.createIcons();
+}
+
+// Sidebar mobil
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+// Sidebar bei Klick auf Link schließen (mobil)
+document.querySelectorAll('.sidebar a.nav-link').forEach(a => {
+  a.addEventListener('click', () => {
+    if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+// Scroll-Progress
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+});
+
+// Reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.05, rootMargin: '0px 0px -10% 0px' });
+document.querySelectorAll('.reveal').forEach(el => {
+  observer.observe(el);
+  // Sofort sichtbar machen, wenn beim Laden schon im Viewport
+  const r = el.getBoundingClientRect();
+  if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('visible');
+});
+
+// Copy-Funktion (kopiert reinen Text ohne HTML-Markup)
+function copyPrompt(promptId, btn) {
+  const el = document.getElementById(promptId);
+  // innerText respektiert Zeilenumbrüche und ignoriert HTML-Struktur
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    const span = btn.querySelector('span');
+    const icon = btn.querySelector('i');
+    const oldText = span.textContent;
+    span.textContent = 'Kopiert!';
+    icon.setAttribute('data-lucide', 'check');
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      span.textContent = oldText;
+      icon.setAttribute('data-lucide', 'copy');
+      if (window.lucide) lucide.createIcons();
+    }, 2000);
+  }).catch(() => {
+    // Fallback: Markieren statt Kopieren
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+
+// Icons initialisieren
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
